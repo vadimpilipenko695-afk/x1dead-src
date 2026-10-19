@@ -13,16 +13,20 @@ jobs:
       - name: Unzip Source
         run: |
           unzip -q x1dead-src.zip
-          # Проверим, что внутри x1dead-src
-          ls -la x1dead-src
+
+      - name: Patch Android.mk
+        run: |
+          # Заходим в jni и меняем путь с inj на src в Android.mk
+          cd ./x1dead-src/jni
+          
+          # Удаляем старые пути и заменяем на src
+          sed -i 's|../inj/main.cpp|../src/main.cpp|g' Android.mk
+          # Если есть другие файлы из inj, тоже меняем
+          sed -i 's|../inj/|../src/|g' Android.mk
 
       - name: Build native library
         run: |
           cd ./x1dead-src/jni
-          
-          # Проверим содержимое папки inj (если она есть)
-          ls -la ../inj/
-          
           # Запускаем сборку
           $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
 
