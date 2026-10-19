@@ -13,37 +13,24 @@ jobs:
       - name: Unzip Source
         run: |
           unzip -q x1dead-src.zip
-          # Покажем, что вообще лежит в корне после распаковки
-          ls -la
+          # Проверим, что внутри x1dead-src
+          ls -la x1dead-src
 
       - name: Build native library
         run: |
-          # Ищем файл Android.mk и заходим в его папку
-          MK_PATH=$(find . -name "Android.mk" | head -n 1)
+          cd ./x1dead-src/jni
           
-          if [ -z "$MK_PATH" ]; then
-            echo "Android.mk not found!"
-            exit 1
-          fi
+          # Проверим содержимое папки inj (если она есть)
+          ls -la ../inj/
           
-          MK_DIR=$(dirname "$MK_PATH")
-          echo "Found Android.mk in: $MK_DIR"
-          
-          # Заходим в папку с Android.mk (это может быть jni или корень)
-          cd "$MK_DIR"
-          
-          if [ -f "jni/Android.mk" ]; then
-             $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./jni/Android.mk NDK_APPLICATION_MK=./jni/Application.mk
-          else
-             $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
-          fi
+          # Запускаем сборку
+          $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
 
       - name: Upload Artifact
         run: |
-          # Ищем скомпилированный .so файл
           find . -name "*.so" -path "*arm64*"
 
       - uses: actions/upload-artifact@v4
         with:
           name: libx1dead_final
-          path: "**/*.so"
+          path: "./x1dead-src/libs/arm64-v8a/*.so"
