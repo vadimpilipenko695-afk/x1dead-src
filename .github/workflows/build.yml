@@ -1,0 +1,34 @@
+name: build
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up NDK r25c
+        uses: nttld/setup-ndk@v1
+        with: { ndk-version: r25c }
+
+      - name: Unzip Source
+        run: |
+          unzip -q x1dead-src.zip
+          # Перемещаем содержимое из папки privetotglamura в корень
+          if [ -d "privetotglamura" ]; then mv privetotglamura/* .; fi
+          
+      - name: Build native library
+        run: |
+          # Ищем Android.mk и собираем
+          if [ -f "jni/Android.mk" ]; then
+            $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./jni/Android.mk NDK_APPLICATION_MK=./jni/Application.mk
+          elif [ -f "Android.mk" ]; then
+            $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libx1dead_final
+          path: |
+            libs/arm64-v8a/*.so
+            obj/local/arm64-v8a/*.so
