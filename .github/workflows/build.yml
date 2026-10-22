@@ -12,17 +12,22 @@ jobs:
 
       - name: Unzip Source
         run: |
-          unzip -q x1dead-src.zip
-          ls -la
-
-      - name: Build native library
+          unzip -q litvin.zip
+          
+      - name: Build with CMake
         run: |
-          cd jni
-          $ANDROID_NDK_HOME/ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=./Android.mk NDK_APPLICATION_MK=./Application.mk
+          # Заходим в папку с исходниками (она может называться litvin или быть в корне)
+          if [ -d "litvin" ]; then cd litvin; fi
+          
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
+                -DANDROID_ABI=arm64-v8a -DANDROID_PLATFORM=android-24
+          cmake --build build -j
+
+      - name: Upload Artifact
+        run: |
+          find . -name "*.so" -path "*build*"
 
       - uses: actions/upload-artifact@v4
         with:
           name: libx1dead_final
-          path: |
-            libs/arm64-v8a/*.so
-            libs/arm64-v8a/inj
+          path: "**/libLitvinTap.so"
